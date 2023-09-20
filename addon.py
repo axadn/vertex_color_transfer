@@ -9,7 +9,7 @@ import bpy
 copy_from_attr = "Gradient"
 copy_to_attr = "Gradient"
 from_channel = 0
-to_channel = 2
+to_channel = 3
 class ObjectCopyVertexColorChannel(bpy.types.Operator):
     """Copy Vertex Color Channel"""      # Use this as a tooltip for menu items and buttons.
     bl_idname = "object.copy_vertex_color_channel"        # Unique identifier for buttons and menu items to reference.
@@ -19,10 +19,9 @@ class ObjectCopyVertexColorChannel(bpy.types.Operator):
     def execute(self, context):        # execute() is called when running the operator.
 
         active_mesh = context.active_object.data
-        active_colors = active_mesh.color_attributes["Attribute"]
         for v_index in range(len(active_mesh.vertices)):
-            active_mesh.color_attributes[copy_to_attr].color[to_channel] =\
-            active_mesh.color_attributes[copy_from_attr].color[from_channel]
+            active_mesh.color_attributes[copy_to_attr].data[v_index].color[to_channel] =\
+            active_mesh.color_attributes[copy_from_attr].data[v_index].color[from_channel]
 
         return {'FINISHED'}            # Lets Blender know the operator finished successfully.
 
