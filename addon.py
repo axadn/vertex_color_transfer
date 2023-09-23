@@ -17,7 +17,8 @@ class CopyVertexColorChannel(bpy.types.Operator):
     items = [('0','Red','Red','',0), 
              ('1','Green','Green','',1),
              ('2','Blue','Blue','',2),
-             ('3','Alpha','Alpha','',3)],
+             ('3','Alpha','Alpha','',3),
+             ('greyscale','Greyscale average','Greyscale average',4)],
     name = "Copy From Channel",
     default = '0')
 
@@ -28,9 +29,15 @@ class CopyVertexColorChannel(bpy.types.Operator):
         bpy.types.WindowManager.vertex_color_clipboard = []
         bpy.types.WindowManager.vertex_color_copied_domain = active_color.domain
         
-        for v_index in range(len(active_color.data)):
-            bpy.types.WindowManager.vertex_color_clipboard.append(
-                active_color.data[v_index].color[int(self.from_channel)])
+        if self.from_channel == 'greyscale':
+            for v_index in range(len(active_color.data)):
+                color = active_color.data[v_index].color
+                grey = (color[0] + color[1] + color[2] + color[3]) / 4
+                bpy.types.WindowManager.vertex_color_clipboard.append(grey)
+        else:
+            for v_index in range(len(active_color.data)):
+                bpy.types.WindowManager.vertex_color_clipboard.append(
+                    active_color.data[v_index].color[int(self.from_channel)])
                 
         return {'FINISHED'}            
     
