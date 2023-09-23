@@ -10,6 +10,10 @@ import functools
 def getGreyscaleAverage(color_data):
     return list(map(lambda v :
          (v.color[0] + v.color[1] + v.color[2]) * v.color[3] / 3, color_data))
+         
+def getGreyscaleNoAlpha(color_data):
+    return list(map(lambda v :
+         (v.color[0] + v.color[1] + v.color[2]) / 3, color_data))
 
 def getChannelData(color_data, channel_index):
     return list(map(lambda v: v.color[channel_index], color_data))
@@ -26,7 +30,9 @@ class CopyVertexColorChannel(bpy.types.Operator):
              ('1','Green','Green','',1),
              ('2','Blue','Blue','',2),
              ('3','Alpha','Alpha','',3),
-             ('greyscale','Greyscale average','Greyscale average',4)],
+             ('greyscale','Greyscale average','Greyscale average',4),
+             ('greyscale_no_alpha','Greyscale average (no alpha)',
+                'Greyscale average (no alpha)',5)],
     name = "Copy From Channel",
     default = '0')
 
@@ -37,7 +43,10 @@ class CopyVertexColorChannel(bpy.types.Operator):
         bpy.types.WindowManager.vertex_color_clipboard = []
         bpy.types.WindowManager.vertex_color_copied_domain = active_color.domain
         
-        if self.from_channel == 'greyscale':
+        if self.from_channel == 'greyscale_no_alpha':
+             bpy.types.WindowManager.vertex_color_clipboard = getGreyscaleNoAlpha(
+                active_color.data)
+        elif self.from_channel == 'greyscale':
             bpy.types.WindowManager.vertex_color_clipboard = getGreyscaleAverage(
                 active_color.data)
         else:
