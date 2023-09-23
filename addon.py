@@ -5,20 +5,14 @@ bl_info = {
 }
 
 import bpy
+import functools
 
 def getGreyscaleAverage(color_data):
-    output = []
-    for v_index in range(len(color_data)):
-        color = color_data[v_index].color
-        grey = (color[0] + color[1] + color[2] + color[3]) / 4
-        output.append(grey)
-    return output
+    return list(map(lambda v : functools.reduce(lambda a,b: a+b, v.color) / 4,
+         color_data))
 
 def getChannelData(color_data, channel_index):
-    output = []
-    for v_index in range(len(color_data)):
-        output.append(color_data[v_index].color[channel_index])
-    return output
+    return list(map(lambda v: v.color[channel_index], color_data))
         
 class CopyVertexColorChannel(bpy.types.Operator):
     """Copy Vertex Color Channel"""
