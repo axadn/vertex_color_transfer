@@ -1,39 +1,95 @@
 bl_info = {
     "name": "Copy Vertex Color Channel",
-    "blender": (3, 60, 3),
+    "blender": (2, 80, 0),
     "category": "Object",
 }
 
 import bpy
 
-copy_from_attr = "Gradient"
-copy_to_attr = "Gradient"
-from_channel = 0
-to_channel = 3
-class ObjectCopyVertexColorChannel(bpy.types.Operator):
-    """Copy Vertex Color Channel"""      # Use this as a tooltip for menu items and buttons.
-    bl_idname = "object.copy_vertex_color_channel"        # Unique identifier for buttons and menu items to reference.
-    bl_label = "Copy Vertex Color Channel"         # Display name in the interface.
-    bl_options = {'REGISTER', 'UNDO'}  # Enable undo for the operator.
+class CopyVertexColorChannel(bpy.types.Operator):
+    """Copy Vertex Color Channel"""
+    bl_idname = "object.copy_vertex_color_channel"        
+    bl_label = "Copy Vertex Color Channel"         
+    bl_options = {'REGISTER', 'UNDO'}  
+        
+    from_channel: bpy.props.EnumProperty(
+            #(identifier, name, description, icon, number)
+    items = [('0','Red','Red','',0), 
+             ('1','Green','Green','',1),
+             ('2','Blue','Blue','',2),
+             ('3','Alpha','Alpha','',3)],
+    name = "Copy From Channel",
+    default = '0')
 
     def execute(self, context):        # execute() is called when running the operator.
-
         active_mesh = context.active_object.data
-        for v_index in range(len(active_mesh.vertices)):
-            active_mesh.color_attributes[copy_to_attr].data[v_index].color[to_channel] =\
-            active_mesh.color_attributes[copy_from_attr].data[v_index].color[from_channel]
+        active_color =  active_mesh.color_attributes.active_color
+        
+        bpy.types.WindowManager.vertex_color_clipboard = []
+        bpy.types.WindowManager.vertex_color_copied_domain = active_color.domain
+        
+        for v_index in range(len(active_color.data)):
+            bpy.types.WindowManager.vertex_color_clipboard.append(
+                active_color.data[v_index].color[int(self.from_channel)])
+                
+        return {'FINISHED'}            
+    
+    def invoke(self, context, event) :
+        return context.window_manager.invoke_props_dialog(self)
+    
+class PasteVertexColorChannel(bpy.types.Operator):
+    """Paste Vertex Color Channel""" 
+    bl_idname = "object.paste_vertex_color_channel"       
+    bl_label = "Paste Vertex Color Channel"        
+    bl_options = {'REGISTER', 'UNDO'} 
+        
+    to_channel: bpy.props.EnumProperty(
+            #(identifier, name, description, icon, number)
+    items = [('0','Red','Red','',0), 
+             ('1','Green','Green','',1),
+             ('2','Blue','Blue','',2),
+             ('3','Alpha','Alpha','',3)],
+    name = "Paste To Channel",
+    default = '0')
 
-        return {'FINISHED'}            # Lets Blender know the operator finished successfully.
+    def execute(self, context):        # execute() is called when running the operator.
+        active_mesh = context.active_object.data
+        active_color =  active_mesh.color_attributes.active_color
+        
+        if active_color.domain != bpy.types.WindowManager.vertex_color_copied_domain :
+            self.report({'ERROR_INVALID_INPUT'},
+             "source and destination must have the same domain ")
+            return {'CANCELLED'}
+        if len(active_color.data) != len(bpy.types.WindowManager.vertex_color_clipboard) :
+            self.report({'ERROR_INVALID_INPUT'},
+             "source and destination must have the same number of vertices")
+            return {'CANCELLED'}
+        
+        for v_index in range(len(active_color.data)):
+            active_color.data[v_index].color[int(self.to_channel)] =\
+                bpy.types.WindowManager.vertex_color_clipboard[v_index]
 
-def menu_func(self, context):
-    self.layout.operator(ObjectCopyVertexColorChannel.bl_idname)
+        return {'FINISHED'} 
+    
+    def invoke(self, context, event) :
+        return context.window_manager.invoke_props_dialog(self)   
+
+def menu_func1(self, context):
+    self.layout.operator(CopyVertexColorChannel.bl_idname)
+    
+def menu_func2(self, context):
+    self.layout.operator(PasteVertexColorChannel.bl_idname)
 
 def register():
-    bpy.utils.register_class(ObjectCopyVertexColorChannel)
-    bpy.types.VIEW3D_MT_object.append(menu_func)  # Adds the new operator to an existing menu.
+    bpy.utils.register_class(CopyVertexColorChannel)
+    bpy.utils.register_class(PasteVertexColorChannel)
+    bpy.types.MESH_MT_color_attribute_context_menu.append(menu_func1)
+    bpy.types.MESH_MT_color_attribute_context_menu.append(menu_func2)
+
 
 def unregister():
-    bpy.utils.unregister_class(ObjectCopyVertexColorChannel)
+    bpy.utils.unregister_class(CopyVertexColorChannel)
+    bpy.utils.unregister_class(PasteVertexColorChannel)
 
 
 # This allows you to run the script directly from Blender's Text editor
