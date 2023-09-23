@@ -6,6 +6,20 @@ bl_info = {
 
 import bpy
 
+def getGreyscaleAverage(color_data):
+    output = []
+    for v_index in range(len(color_data)):
+        color = color_data[v_index].color
+        grey = (color[0] + color[1] + color[2] + color[3]) / 4
+        output.append(grey)
+    return output
+
+def getChannelData(color_data, channel_index):
+    output = []
+    for v_index in range(len(color_data)):
+        output.append(color_data[v_index].color[channel_index])
+    return output
+        
 class CopyVertexColorChannel(bpy.types.Operator):
     """Copy Vertex Color Channel"""
     bl_idname = "object.copy_vertex_color_channel"        
@@ -30,14 +44,11 @@ class CopyVertexColorChannel(bpy.types.Operator):
         bpy.types.WindowManager.vertex_color_copied_domain = active_color.domain
         
         if self.from_channel == 'greyscale':
-            for v_index in range(len(active_color.data)):
-                color = active_color.data[v_index].color
-                grey = (color[0] + color[1] + color[2] + color[3]) / 4
-                bpy.types.WindowManager.vertex_color_clipboard.append(grey)
+            bpy.types.WindowManager.vertex_color_clipboard = getGreyscaleAverage(
+                active_color.data)
         else:
-            for v_index in range(len(active_color.data)):
-                bpy.types.WindowManager.vertex_color_clipboard.append(
-                    active_color.data[v_index].color[int(self.from_channel)])
+            bpy.types.WindowManager.vertex_color_clipboard = getChannelData(
+                active_color.data, int(self.from_channel))
                 
         return {'FINISHED'}            
     
