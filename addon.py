@@ -8,8 +8,8 @@ import bpy
 import functools
 
 def getGreyscaleAverage(color_data):
-    return list(map(lambda v : functools.reduce(lambda a,b: a+b, v.color) / 4,
-         color_data))
+    return list(map(lambda v :
+         (v.color[0] + v.color[1] + v.color[2]) * v.color[3] / 3, color_data))
 
 def getChannelData(color_data, channel_index):
     return list(map(lambda v: v.color[channel_index], color_data))
