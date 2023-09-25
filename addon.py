@@ -69,7 +69,9 @@ class PasteVertexColorChannel(bpy.types.Operator):
     items = [('0','Red','Red','',0), 
              ('1','Green','Green','',1),
              ('2','Blue','Blue','',2),
-             ('3','Alpha','Alpha','',3)],
+             ('3','Alpha','Alpha','',3),
+             ('all', 'All', 'All', 4),
+             ('all_no_alpha', 'All (No alpha)','All (No alpha)', 5)],
     name = "Paste To Channel",
     default = '0')
 
@@ -86,9 +88,19 @@ class PasteVertexColorChannel(bpy.types.Operator):
              "source and destination must have the same number of vertices")
             return {'CANCELLED'}
         
-        for v_index in range(len(active_color.data)):
-            active_color.data[v_index].color[int(self.to_channel)] =\
-                bpy.types.WindowManager.vertex_color_clipboard[v_index]
+        if self.to_channel == 'all' :
+            for v_index in range(len(active_color.data)):
+                active_color.data[v_index].color =\
+                [bpy.types.WindowManager.vertex_color_clipboard[v_index]] * 4
+        elif self.to_channel == 'all_no_alpha' :
+            for v_index in range(len(active_color.data)):
+                active_color.data[v_index].color =\
+                [bpy.types.WindowManager.vertex_color_clipboard[v_index]] * 3 +\
+                 active_color.data[v_index].color[3]
+        else:
+            for v_index in range(len(active_color.data)):
+                active_color.data[v_index].color[int(self.to_channel)] =\
+                    bpy.types.WindowManager.vertex_color_clipboard[v_index]
 
         return {'FINISHED'} 
     
